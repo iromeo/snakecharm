@@ -109,7 +109,7 @@ abstract class AbstractSmkRuleOrCheckpointType<T: SmkRuleOrCheckpoint>(
             return emptyList()
         }
 
-        val module = location?.let {  ModuleUtilCore.findModuleForPsiElement(it.originalElement) }
+        val module = location?.let { ModuleUtilCore.findModuleForPsiElement(it.originalElement) }
         val results = if (module != null) {
             val scope = searchScope(module)
             StubIndex.getElements(indexKey, name, module.project, scope, clazz)

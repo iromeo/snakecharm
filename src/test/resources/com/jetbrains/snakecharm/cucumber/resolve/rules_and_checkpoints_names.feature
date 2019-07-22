@@ -203,3 +203,41 @@ Feature: Resolve name after 'rules.' and 'checkpoints.' to their corresponding d
        | rule_like  | symbol_name  |
        | rule       | boo |
        | checkpoint | boo |
+
+  Scenario Outline: Sections resolve
+    Given a snakemake project
+    Given I open a file "foo.smk" with text
+    """
+    <rule_like> aaaa:
+      input: "path/to/input"
+      output: "path/to/output"
+      shell: "shell command"
+
+    <rule_like> cccc:
+      input: <rule_like>s.aaaa.output
+    """
+    When I put the caret after <rule_like>s.aaaa.out
+    Then reference should resolve to "output" in "foo.smk"
+    Examples:
+      | rule_like  |
+      | rule       |
+      | checkpoint |
+
+  Scenario Outline: Keyword arguments in sections resolve
+    Given a snakemake project
+    Given I open a file "foo.smk" with text
+    """
+    <rule_like> aaaa:
+      input: "path/to/input"
+      output: path1="path/to/output", path2="another_path/to/output"
+      shell: "shell command"
+
+    <rule_like> cccc:
+      input: <rule_like>s.aaaa.output.path1
+    """
+    When I put the caret after <rule_like>s.aaaa.output.path
+    Then reference should resolve to "path1" in "foo.smk"
+    Examples:
+      | rule_like  |
+      | rule       |
+      | checkpoint |

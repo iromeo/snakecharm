@@ -6,13 +6,14 @@ import com.jetbrains.python.psi.types.PyType
 import com.jetbrains.python.psi.types.PyTypeProviderBase
 import com.jetbrains.python.psi.types.TypeEvalContext
 import com.jetbrains.snakecharm.lang.SnakemakeLanguageDialect
+import com.jetbrains.snakecharm.lang.SnakemakeNames
 import com.jetbrains.snakecharm.lang.SnakemakeNames.SMK_VARS_CHECKPOINTS
 import com.jetbrains.snakecharm.lang.SnakemakeNames.SMK_VARS_RULES
-import com.jetbrains.snakecharm.lang.psi.SmkCheckPoint
-import com.jetbrains.snakecharm.lang.psi.SmkFile
-import com.jetbrains.snakecharm.lang.psi.SmkRule
+import com.jetbrains.snakecharm.lang.psi.*
 import com.jetbrains.snakecharm.lang.psi.types.SmkCheckPointsType
+import com.jetbrains.snakecharm.lang.psi.types.SmkRuleOrCheckpointArgsSectionType
 import com.jetbrains.snakecharm.lang.psi.types.SmkRulesType
+import com.jetbrains.snakecharm.lang.psi.types.SmkSectionArgumentType
 
 class SmkSectionTypeProvider : PyTypeProviderBase() {
 
@@ -28,7 +29,28 @@ class SmkSectionTypeProvider : PyTypeProviderBase() {
         val psiFile = referenceExpression.containingFile
 
         if (referenceExpression.children.isNotEmpty()) {
-            // part of some longer reference
+            val resolvedReference = referenceExpression.reference.multiResolve(false)
+
+            val containingSections = resolvedReference.filter {
+                it.element is SmkRuleOrCheckpointArgsSection &&
+                        (it.element as SmkRuleOrCheckpointArgsSection).name == SnakemakeNames.SECTION_OUTPUT
+            }
+            if (containingSections.isNotEmpty()) {
+                return SmkSectionArgumentType(
+                        referenceExpression,
+                        containingSections.map { it.element as SmkRuleOrCheckpointArgsSection }
+                )
+            }
+
+            val containingRulesOrCheckpoints = resolvedReference.filter { it.element is SmkRuleOrCheckpoint }
+            if (containingRulesOrCheckpoints.isNotEmpty()) {
+                return SmkRuleOrCheckpointArgsSectionType(
+                        referenceExpression.parent as PyReferenceExpression,
+                        containingRulesOrCheckpoints.map { it.element as SmkRuleOrCheckpoint }
+                )
+            }
+
+            // part of some other longer reference
             return null
         }
         // XXX: at the moment affects all "rules" variables in a *.smk file, better to
