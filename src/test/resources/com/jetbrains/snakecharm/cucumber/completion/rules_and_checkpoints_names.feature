@@ -159,3 +159,100 @@ Feature: Rule and Checkpoints names completion after 'rules.' and 'checkpoints.'
       | rule_like  |
       | rule       |
       | checkpoint |
+
+  Scenario Outline: Section names completion at top level
+    Given a snakemake project
+    Given I open a file "foo.smk" with text
+    """
+    <rule_like> aaaa:
+      input: "path/to/input"
+      output: "path/to/output"
+      shell: "shell command"
+
+    <rule_like>s.aaaa.
+    """
+    When I put the caret after <rule_like>s.aaaa.
+    And I invoke autocompletion popup, select "output" lookup item and see a text:
+    """
+    <rule_like> aaaa:
+      input: "path/to/input"
+      output: "path/to/output"
+      shell: "shell command"
+
+    <rule_like>s.aaaa.output
+    """
+    Examples:
+      | rule_like  |
+      | rule       |
+      | checkpoint |
+
+  Scenario Outline: Section names completion inside another rule section
+    Given a snakemake project
+    Given I open a file "foo.smk" with text
+    """
+    <rule_like> aaaa:
+      input: "path/to/input"
+      output: "path/to/output"
+      shell: "shell command"
+
+    <rule_like> bbbb:
+      input: <rule_like>s.aaaa.
+    """
+    When I put the caret after <rule_like>s.aaaa.
+    And I invoke autocompletion popup, select "output" lookup item and see a text:
+    """
+    <rule_like> aaaa:
+      input: "path/to/input"
+      output: "path/to/output"
+      shell: "shell command"
+
+    <rule_like> bbbb:
+      input: <rule_like>s.aaaa.output
+    """
+    Examples:
+      | rule_like  |
+      | rule       |
+      | checkpoint |
+
+  Scenario Outline: Section keyword arguments completion at top level
+    Given a snakemake project
+    Given I open a file "foo.smk" with text
+    """
+    <rule_like> aaaa:
+      input: "path/to/input"
+      output: path1="path/to/output", path2="another_path/to/output"
+      shell: "shell command"
+
+    <rule_like>s.aaaa.output.
+    """
+    When I put the caret after <rule_like>s.aaaa.output.
+    And I invoke autocompletion popup
+    Then completion list should contain:
+      | path1  |
+      | path2  |
+    Examples:
+      | rule_like  |
+      | rule       |
+      | checkpoint |
+
+  Scenario Outline: Section keyword arguments completion inside another rule section
+    Given a snakemake project
+    Given I open a file "foo.smk" with text
+    """
+    <rule_like> aaaa:
+      input: "path/to/input"
+      output: path1="path/to/output", path2="another_path/to/output"
+      shell: "shell command"
+
+    <rule_like> bbbb:
+      input: <rule_like>s.aaaa.output.
+    """
+    When I put the caret after <rule_like>s.aaaa.output.
+    And I invoke autocompletion popup
+    Then completion list should contain:
+      | path1  |
+      | path2  |
+    Examples:
+      | rule_like  |
+      | rule       |
+      | checkpoint |

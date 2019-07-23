@@ -33,7 +33,7 @@ class SmkSectionTypeProvider : PyTypeProviderBase() {
 
             val containingSections = resolvedReference.filter {
                 it.element is SmkRuleOrCheckpointArgsSection &&
-                        (it.element as SmkRuleOrCheckpointArgsSection).name == SnakemakeNames.SECTION_OUTPUT
+                        (it.element as SmkRuleOrCheckpointArgsSection).name in SmkRuleOrCheckpointArgsSection.RULE_PROXY_KEYWORDS
             }
             if (containingSections.isNotEmpty()) {
                 return SmkSectionArgumentType(
@@ -44,10 +44,13 @@ class SmkSectionTypeProvider : PyTypeProviderBase() {
 
             val containingRulesOrCheckpoints = resolvedReference.filter { it.element is SmkRuleOrCheckpoint }
             if (containingRulesOrCheckpoints.isNotEmpty()) {
-                return SmkRuleOrCheckpointArgsSectionType(
-                        referenceExpression.parent as PyReferenceExpression,
-                        containingRulesOrCheckpoints.map { it.element as SmkRuleOrCheckpoint }
-                )
+                val parentReference = referenceExpression.parent as? PyReferenceExpression
+                if (parentReference != null) {
+                    return SmkRuleOrCheckpointArgsSectionType(
+                            referenceExpression.parent as PyReferenceExpression,
+                            containingRulesOrCheckpoints.map { it.element as SmkRuleOrCheckpoint }
+                    )
+                }
             }
 
             // part of some other longer reference

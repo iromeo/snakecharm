@@ -13,6 +13,7 @@ import com.jetbrains.python.psi.resolve.RatedResolveResult
 import com.jetbrains.python.psi.types.PyType
 import com.jetbrains.snakecharm.lang.SnakemakeNames
 import com.jetbrains.snakecharm.lang.psi.SmkRuleOrCheckpoint
+import com.jetbrains.snakecharm.lang.psi.SmkRuleOrCheckpointArgsSection
 import com.jetbrains.snakecharm.lang.psi.SmkSection
 
 class SmkRuleOrCheckpointArgsSectionType(
@@ -31,13 +32,18 @@ class SmkRuleOrCheckpointArgsSectionType(
     ): List<RatedResolveResult> {
         val variants = mutableListOf<SmkSection>()
         containingRulesOrCheckpoints.forEach { ruleLike ->
-            // only resolve output section
-            val section = ruleLike.getSections().firstOrNull { it.name == SnakemakeNames.SECTION_OUTPUT }
-            if (section != null) {
-                variants.add(section)
-            }
+            variants.addAll(
+                    ruleLike.getSections()
+                            .filter { it.name == name && name in SmkRuleOrCheckpointArgsSection.RULE_PROXY_KEYWORDS }
+            )
         }
-        return listOf(RatedResolveResult(RatedResolveResult.RATE_NORMAL, variants.first()))
+        // first of all, why doesn't multi-resolve work?
+        return if (variants.isNotEmpty()) {
+            listOf(RatedResolveResult(RatedResolveResult.RATE_NORMAL, variants.first()))
+        } else {
+            emptyList()
+        }
+
         //return variants.map { RatedResolveResult(RatedResolveResult.RATE_NORMAL, it) }
     }
 
@@ -47,12 +53,14 @@ class SmkRuleOrCheckpointArgsSectionType(
             context: ProcessingContext?
     ): Array<Any> {
         val variants = mutableListOf<LookupElement>()
-        containingRulesOrCheckpoints.forEach {
-            variants.add(
-                    LookupElementBuilder.create(SnakemakeNames.SECTION_OUTPUT)
-                            .withTypeText(it.containingFile.name)
+        containingRulesOrCheckpoints.forEach { ruleLike ->
+            variants.addAll(
+                    ruleLike.getSections()
+                            .filter { it.name in SmkRuleOrCheckpointArgsSection.RULE_PROXY_KEYWORDS }
+                            .map { LookupElementBuilder.create(it.name!!).withTypeText(it.containingFile.name) }
             )
         }
+
         return variants.toTypedArray()
     }
 

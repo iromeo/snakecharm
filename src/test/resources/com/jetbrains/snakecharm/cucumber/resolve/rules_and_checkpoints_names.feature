@@ -241,3 +241,24 @@ Feature: Resolve name after 'rules.' and 'checkpoints.' to their corresponding d
       | rule_like  |
       | rule       |
       | checkpoint |
+
+  Scenario Outline: resolve for sections other than input
+    Given a snakemake project
+    Given I open a file "foo.smk" with text
+    """
+    <rule_like> foo:
+      params: a="file.smk"
+      log: "log.txt"
+
+    <rule_like> foo1:
+      input: <rule_like>s.foo.params.a
+      output: "output.txt"
+      log: <rule_like>s.foo.log
+      shell: "cat {input} > output.txt"
+    """
+    When I put the caret after <rule_like>s.foo.lo
+    Then reference should resolve to "log" in "foo.smk"
+    Examples:
+      | rule_like  |
+      | rule       |
+      | checkpoint |

@@ -32,6 +32,12 @@ interface SmkRuleOrCheckpointArgsSection : SmkArgsSection { // PyNamedElementCon
                 SnakemakeNames.SECTION_CONDA,
                 SnakemakeNames.SECTION_SCRIPT, SnakemakeNames.SECTION_WRAPPER, SnakemakeNames.SECTION_CWL
         )
+
+        val RULE_PROXY_KEYWORDS = setOf(
+                SnakemakeNames.SECTION_INPUT, SnakemakeNames.SECTION_OUTPUT,
+                SnakemakeNames.SECTION_PARAMS, SnakemakeNames.SECTION_BENCHMARK,
+                SnakemakeNames.SECTION_LOG
+        )
     }
 }
 
